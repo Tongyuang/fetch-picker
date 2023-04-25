@@ -17,7 +17,7 @@ from visualization_msgs.msg import Marker
 
 
 from std_msgs.msg import ColorRGBA
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point,PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 
 import copy
@@ -32,7 +32,7 @@ class MyInteractiveMarker():
         self._markerDistance = 1
         self._robotPrevPosition = Odometry().pose.pose
         self._markerlist = []
-
+        self.fixed_frame = "map" # map or odom
         # create some interactive markers
         marker1 = self.CreateInteractiveMarker(position = Point(self._markerDistance,0,0.6),
                                                color = ColorRGBA(r=0.0, g=0.5, b=0.5, a=1.0),
@@ -59,7 +59,10 @@ class MyInteractiveMarker():
             self.server.insert(marker,self.HandleRvizInput)
             
         self.server.applyChanges()
-        self.sub = rospy.Subscriber("odom", Odometry, self.UpdateMarkerPosition)
+        if self.fixed_frame == "odom":
+            self.sub = rospy.Subscriber("odom", Odometry, self.UpdateMarkerPosition)
+        elif self.fixed_frame == "map":
+            self.sub = rospy.Subscriber("/amcl_pose",PoseWithCovarianceStamped,self.UpdateMarkerPosition)
         # create a driver
         self.driver = robot_api.Base()
     
@@ -94,7 +97,8 @@ class MyInteractiveMarker():
         
         # setup Interactive Marker for this button
         ThisInteractiveMarker = InteractiveMarker()
-        ThisInteractiveMarker.header.frame_id = "map"# 'odom'
+        ThisInteractiveMarker.header.frame_id = self.fixed_frame
+        ThisInteractiveMarker.header.stamp = rospy.Time.now()
         ThisInteractiveMarker.name = name
         ThisInteractiveMarker.description = description
         # set orientation
@@ -106,11 +110,12 @@ class MyInteractiveMarker():
         
         return ThisInteractiveMarker
 
-    def UpdateMarkerPosition(self,odom_msg):
-        '''This function subscribes the /odom topic and update the markers' position
+    def UpdateMarkerPosition(self,msg):
+        '''This function subscribes the either /odom(for fixed_frame=odom) or /amcl(map) 
+            topic and update the markers' position
             It will work as a callback function
         '''
-        now_pos = odom_msg.pose.pose
+        now_pos = msg.pose.pose
         robot_position = now_pos.position
         robot_orientation = now_pos.orientation
 
