@@ -191,6 +191,7 @@ def main():
     rospy.init_node('Interactive_Marker_demo')
     wait_for_time()
     Marker = MyInteractiveMarker()
+    rospy.sleep(0.5)
     rospy.spin()
     
     

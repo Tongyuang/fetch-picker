@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Status1
+        - /InteractiveMarkers1
       Splitter Ratio: 0.5
     Tree Height: 476
   - Class: rviz/Selection
@@ -291,6 +292,7 @@ Visualization Manager:
         Global costmap: true
         Global plan: true
         Grid: true
+        InteractiveMarkers: true
         LaserScan: true
         Local costmap: true
         Local plan: true
@@ -306,7 +308,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: Particles
@@ -316,7 +318,7 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /particlecloud
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
@@ -385,6 +387,15 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: InteractiveMarkers
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /map_annotator/map_poses/update
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -413,7 +424,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 24.521039962768555
+      Distance: 5.883403301239014
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -429,9 +440,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.4853976964950562
+      Pitch: 1.184796690940857
       Target Frame: <Fixed Frame>
-      Yaw: 3.1835646629333496
+      Yaw: 3.2285661697387695
     Saved: ~
 Window Geometry:
   Camera:
