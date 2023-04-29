@@ -1,15 +1,18 @@
+from collections import defaultdict
+
 import actionlib
 import rospy
 from control_msgs.msg import (FollowJointTrajectoryAction,
                               FollowJointTrajectoryGoal)
 from geometry_msgs.msg import PoseStamped
 from moveit_msgs.msg import MoveGroupAction, MoveItErrorCodes
+from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 from .arm_joints import ArmJoints
 from .moveit_goal_builder import MoveItGoalBuilder
 
-from collections import defaultdict
+
 
 ACTION_NAME = '/arm_controller/follow_joint_trajectory'
 MOVE_GROUP_ACTION_NAME = 'move_group'
@@ -37,6 +40,9 @@ class Arm(object):
         rospy.loginfo("Action server started.") 
         # create error dict
         self._create_error_dict()
+        
+        # for inverse kinetics
+        self._compute_ik = rospy.ServiceProxy('compute_ik', GetPositionIK)
 
     def _create_error_dict(self):
         """create an error dict for MoveItErrorCode
@@ -155,6 +161,34 @@ class Arm(object):
             tolerance = tolerance,
             plan_only = True
         )
+    
+    def compute_ik(self, pose_stamped, timeout=rospy.Duration(5)):
+        """Computes inverse kinematics for the given pose.
+
+        Note: if you are interested in returning the IK solutions, we have
+            shown how to access them.
+
+        Args:
+            pose_stamped: geometry_msgs/PoseStamped.
+            timeout: rospy.Duration. How long to wait before giving up on the
+                IK solution.
+
+        Returns: True if the inverse kinematics were found, False otherwise.
+        """
+        request = GetPositionIKRequest()
+        request.ik_request.pose_stamped = pose_stamped
+        request.ik_request.group_name = 'arm'
+        request.ik_request.timeout = timeout
+        response = self._compute_ik(request)
+        error_str = self.moveit_error_string(response.error_code.val)
+        success = error_str == 'SUCCESS'
+        if not success:
+            return False
+        joint_state = response.solution.joint_state
+        for name, position in zip(joint_state.name, joint_state.position):
+            if name in ArmJoints.names():
+                rospy.loginfo('{}: {}'.format(name, position))
+        return True
     
     def cancel_all_goals(self):
         self._client.cancel_all_goals() 
