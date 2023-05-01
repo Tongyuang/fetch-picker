@@ -6,6 +6,10 @@ from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Quaternion, Pose, Point, Vector3
 from std_msgs.msg import Header, ColorRGBA
 
+from interactive_markers.interactive_marker_server import InteractiveMarkerServer
+from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl, InteractiveMarkerFeedback
+
+
 
 
 class RvizMarker(object):
@@ -50,3 +54,20 @@ class RvizMarker(object):
                 color=ColorRGBA(0.0, 1.0, 0.0, 0.8), # green
                 points=path)
         self.marker_publisher.publish(marker)
+
+class GripperInteractiveMarker():
+    """Create a gripper marker and return it
+    """
+    def __init__(self):
+        self.mesh_sources = [
+            'L_GRIPPER_MESH': '/home/yuangtong/catkin_ws/src/fetch_ros/fetch_description/meshes/l_gripper_finger_link.STL',
+            'R_GRIPPER_MESH':'/home/yuangtong/catkin_ws/src/fetch_ros/fetch_description/meshes/r_gripper_finger_link.STL',
+            'GRIPPER_MESH':'/home/yuangtong/catkin_ws/src/fetch_ros/fetch_description/meshes/gripper_link.dae'
+            
+        ]
+        self.marker = self.CreateGripperMarker()
+    
+    def CreateGripperMarker(self):
+        gripper_marker = Marker()
+        gripper_marker.type = Marker.MESH_RESOURCE
+        gripper_marker.mesh_resource = self.mesh_sources['GRIPPER_MESH']

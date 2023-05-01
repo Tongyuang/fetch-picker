@@ -35,9 +35,11 @@ class Arm(object):
         # TODO: Wait for server
         rospy.loginfo("Waiting for action server...")
         self._client.wait_for_server()
-        self._move_group_client.wait_for_server()
-        
         rospy.loginfo("Action server started.") 
+        rospy.loginfo("Waiting for move group server...")
+        self._move_group_client.wait_for_server()
+        rospy.loginfo("move group server started.") 
+        
         # create error dict
         self._create_error_dict()
         
@@ -86,10 +88,11 @@ class Arm(object):
         
         self._client.wait_for_result()
         
-        return self.client.get_result()
+        return self._client.get_result()
 
     def move_to_pose(self,
                     pose_stamped,
+                    orientation_constraint=None,
                     allowed_planning_time=10.0,
                     execution_timeout=15.0,
                     group_name='arm',
@@ -132,16 +135,27 @@ class Arm(object):
         goal_builder.replan = replan
         goal_builder.replan_attempts = replan_attempts
         goal_builder.tolerance = tolerance
+                # add orientation_constraint
+        if not orientation_constraint is None:
+            goal_builder.add_path_orientation_constraint(orientation_constraint)
+        
         goal = goal_builder.build() # a MoveGroupGoal
         
         # try to move to the goal
         self._move_group_client.send_goal(goal)
         self._move_group_client.wait_for_result(rospy.Duration(execution_timeout))
-        val = self._move_group_client.get_result().error_code.val
         
-        if val == MoveItErrorCodes.SUCCESS:
-            return None
-        return self.moveit_error_string(val)
+        # get the error code val
+        result = self._move_group_client.get_result()
+        if result is not None:
+            val = result.error_code.val
+        
+            if val == MoveItErrorCodes.SUCCESS:
+                return None
+            else:
+                return self.moveit_error_string(val)
+        else:
+            return "No result from move_group_client"
     
     def check_pose(self,pose_stamped,allowed_planning_time=10.0,group_name='arm',tolerance=0.01):
         """_summary_
