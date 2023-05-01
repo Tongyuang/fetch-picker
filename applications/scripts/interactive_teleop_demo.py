@@ -17,12 +17,13 @@ from visualization_msgs.msg import Marker
 
 
 from std_msgs.msg import ColorRGBA
-from geometry_msgs.msg import Point,PoseWithCovarianceStamped
+from geometry_msgs.msg import Point,PoseWithCovarianceStamped,PoseStamped
 from nav_msgs.msg import Odometry
 
 import copy
 import math
 import tf.transformations as tft
+
 
 class MyInteractiveMarker():
     def __init__(self):
@@ -32,7 +33,7 @@ class MyInteractiveMarker():
         self._markerDistance = 1
         self._robotPrevPosition = Odometry().pose.pose
         self._markerlist = []
-        self.fixed_frame = "map" # map or odom
+        self.fixed_frame = "odom" # map or odom
         # create some interactive markers
         marker1 = self.CreateInteractiveMarker(position = Point(self._markerDistance,0,0.6),
                                                color = ColorRGBA(r=0.0, g=0.5, b=0.5, a=1.0),
@@ -55,9 +56,14 @@ class MyInteractiveMarker():
                                                description = 'right')
         self._markerlist.append(marker4)
         
-        for marker in self._markerlist:
-            self.server.insert(marker,self.HandleRvizInput)
-            
+        #for marker in self._markerlist:
+        #    self.server.insert(marker,self.HandleRvizInput)
+        posestamped = PoseStamped()
+        posestamped.header.frame_id = self.fixed_frame
+        posestamped.header.stamp = rospy.Time.now()
+        posestamped.pose.orientation.w = 1
+        gripperinteractivemarker = robot_api.GripperInteractiveMarker()
+        self.server.insert(gripperinteractivemarker.Create6DofMarker(posestamped),self.HandleRvizInput)
         self.server.applyChanges()
         if self.fixed_frame == "odom":
             self.sub = rospy.Subscriber("odom", Odometry, self.UpdateMarkerPosition)
@@ -76,6 +82,7 @@ class MyInteractiveMarker():
             param position: Point from geometry_msgs.msg
             param name: Name of the cube
         '''
+        
         # setup the BoxMarker(The CUBE)
         BoxMarker = Marker()
         BoxMarker.type = Marker.CUBE
@@ -94,7 +101,6 @@ class MyInteractiveMarker():
         ButtonControl.always_visible = True
         # add a box marker
         ButtonControl.markers.append(BoxMarker)
-        
         # setup Interactive Marker for this button
         ThisInteractiveMarker = InteractiveMarker()
         ThisInteractiveMarker.header.frame_id = self.fixed_frame
