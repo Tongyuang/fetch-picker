@@ -56,14 +56,16 @@ class MyInteractiveMarker():
                                                description = 'right')
         self._markerlist.append(marker4)
         
-        #for marker in self._markerlist:
-        #    self.server.insert(marker,self.HandleRvizInput)
-        posestamped = PoseStamped()
-        posestamped.header.frame_id = self.fixed_frame
-        posestamped.header.stamp = rospy.Time.now()
-        posestamped.pose.orientation.w = 1
-        gripperinteractivemarker = robot_api.GripperInteractiveMarker()
-        self.server.insert(gripperinteractivemarker.Create6DofMarker(posestamped),self.HandleRvizInput)
+        for marker in self._markerlist:
+            self.server.insert(marker,self.HandleRvizInput)
+        #posestamped = PoseStamped()
+        #posestamped.header.frame_id = self.fixed_frame
+        #posestamped.header.stamp = rospy.Time.now()
+        #posestamped.pose.orientation.w = 1
+        
+        #self.gripperinteractivemarker = robot_api.GripperInteractiveMarker(posestamped)
+        #self.server.insert(self.gripperinteractivemarker.GetInteractiveMarker(),self.HandleRvizInput)
+        #self.server.setCallback(self.gripperinteractivemarker.GetInteractiveMarker().name,self.HandleRvizInput)
         self.server.applyChanges()
         if self.fixed_frame == "odom":
             self.sub = rospy.Subscriber("odom", Odometry, self.UpdateMarkerPosition)
@@ -165,7 +167,6 @@ class MyInteractiveMarker():
     def _cal_radian(self,quat):
         # calculate the radian given a quat
         mat = tft.quaternion_matrix([quat.x, quat.y, quat.z, quat.w])
-        
         return math.atan2(mat[0,0], mat[1,0])
 
     def _cal_new_pos(self,marker_origin,robot_origin, robot_new,gamma):
@@ -187,6 +188,8 @@ class MyInteractiveMarker():
         
         
         return new_marker_pos
+
+
 def wait_for_time():                                              
     """Wait for simulated time to begin.                          
     """                                                           
