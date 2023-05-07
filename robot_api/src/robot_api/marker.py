@@ -8,7 +8,9 @@ from geometry_msgs.msg import Quaternion, Pose, Point, Vector3
 from std_msgs.msg import Header, ColorRGBA
 
 from interactive_markers.interactive_marker_server import InteractiveMarkerServer
+
 from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl, InteractiveMarkerFeedback
+
 
 import tf.transformations as tft
 import numpy as np
@@ -59,13 +61,14 @@ class RvizMarker():
 class GripperInteractiveMarker():
     """Create a gripper marker and return it
     """
-    def __init__(self):
+    def __init__(self,posestamped):
         self.mesh_sources = {
             'L_GRIPPER_MESH': 'package://fetch_description/meshes/l_gripper_finger_link.STL',
             'R_GRIPPER_MESH':'package://fetch_description/meshes/r_gripper_finger_link.STL',
             'GRIPPER_MESH':'package://fetch_description/meshes/gripper_link.dae'   
         }
-    
+        self._grippercolor = ColorRGBA(r=0.0,g=0.9,b=0.1,a=1.0)
+        self._6DofinteractiveMarker = self.Create6DofMarker(posestamped)
     @staticmethod
     def _calWorldPos(posetarget,pose_refer_to_target):
         """Calculate position in world coordinate instead of refer to the 
@@ -111,8 +114,19 @@ class GripperInteractiveMarker():
         
         return pose_out
         
-    def CreateGripperMarkers(self,posestamped,frame_id='base_link'):
-        marker_color = ColorRGBA(r=0.0,g=0.9,b=0.1,a=1.0)
+    def CreateGripperMarkers(self,posestamped,color=None):
+        """Create Gripper Markers, which is in the shape of gripper. The __init__ function describes where the markers'
+            mesh resources are located.
+
+        Args:
+            posestamped (PoseStamped): The position of the gripper
+            marker_color (ColorRGBA, optional): The color of the markers. Defaults to ColorRGBA(r=0.0,g=0.9,b=0.1,a=1.0).
+
+        Returns:
+            dict, \{name: marker\}
+        """
+        frame_id = posestamped.header.frame_id
+        marker_color = self._grippercolor if color is None else color
         
         gripper_marker = Marker()
         gripper_marker.type = Marker.MESH_RESOURCE
@@ -120,6 +134,7 @@ class GripperInteractiveMarker():
         gripper_marker.color = marker_color
         gripper_marker.pose = posestamped.pose
         gripper_marker.header.frame_id = frame_id
+        gripper_marker.text = 'gripper_marker'
         
         l_gripper_marker = Marker()
         l_gripper_marker.type = Marker.MESH_RESOURCE
@@ -130,9 +145,8 @@ class GripperInteractiveMarker():
         l_refer_pose.orientation.w = 1
         l_refer_pose.position.y = -0.05
         l_gripper_marker.pose = self._calWorldPos(posestamped.pose,l_refer_pose)
-        # l_gripper_marker.pose.position.y = -0.05 # for the gripper's correct pos
-        # l_gripper_marker.pose.orientation.w = 1
         l_gripper_marker.header.frame_id = frame_id
+        l_gripper_marker.text = 'l_gripper_marker'
         
         r_gripper_marker = Marker()
         r_gripper_marker.type = Marker.MESH_RESOURCE
@@ -143,15 +157,14 @@ class GripperInteractiveMarker():
         r_refer_pose.orientation.w = 1
         r_refer_pose.position.y = 0.05
         r_gripper_marker.pose = self._calWorldPos(posestamped.pose,r_refer_pose)
-        # r_gripper_marker.pose.position.y = 0.05
-        # r_gripper_marker.pose.orientation.w = 1
         r_gripper_marker.header.frame_id = frame_id
+        r_gripper_marker.text = 'r_gripper_marker'
         
         return {'gripper_marker':gripper_marker,
                 'l_gripper_marker':l_gripper_marker,
                 'r_gripper_marker':r_gripper_marker}
     
-    def Create6DofMarker(self,posestamped,X_OFFSET=0.15):
+    def Create6DofMarker(self,posestamped,X_OFFSET=0.177,color=None):
         """Create a 6Dof Interactive Marker
 
         Args:
@@ -176,15 +189,16 @@ class GripperInteractiveMarker():
         target_pose.position.x = X_OFFSET
         posestamped.pose = self._calWorldPos(posestamped.pose,target_pose)
         
-        self.markers = self.CreateGripperMarkers(posestamped,frame_id = posestamped.header.frame_id)
-        
-        # insert the markers
-        maincontrol = InteractiveMarkerControl()
-        maincontrol.always_visible = True
+        self.markers = self.CreateGripperMarkers(posestamped,color)
+
+
+        # add a menu
+        menucontrol = InteractiveMarkerControl()
+        menucontrol.interaction_mode = InteractiveMarkerControl.MENU
+        menucontrol.always_visible = True
         for marker_name in self.markers.keys():
-            maincontrol.markers.append(self.markers[marker_name])
-        intMarker.controls.append(maincontrol)
-        
+            menucontrol.markers.append(self.markers[marker_name])
+        intMarker.controls.append(menucontrol)
         # create a 6DoF controller
         control = InteractiveMarkerControl()
         control.always_visible = True
@@ -227,3 +241,23 @@ class GripperInteractiveMarker():
     def GetMarker(self):
         return self._6DofinteractiveMarker
     
+    def GetMarkerColor(self):
+        return self._grippercolor
+    
+    def UpdateColor(self, color):
+        """Update Markers' color
+
+        Args:
+            color (ColorRGBA): The target color
+        """
+        self._grippercolor = color
+        for control in self._6DofinteractiveMarker.controls:
+            for marker in control.markers:
+                marker.color = color
+                
+    def Update(self,posestamped = None, color = None):
+        
+        if posestamped is not None:
+            self._6DofinteractiveMarker = self.Create6DofMarker(posestamped)
+        if color is not None:
+            self.UpdateColor(color)

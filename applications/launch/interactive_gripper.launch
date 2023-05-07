@@ -1,0 +1,5 @@
+<launch>
+  <!-- <arg name="map_file" default="???" /> -->
+  <include file="$(find fetch_moveit_config)/launch/move_group.launch"/>
+  <node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d $(find applications)/rviz_setup/gripper_interactive_marker.rviz" />
+</launch>
