@@ -7,4 +7,4 @@ This repositiory involves starter code and samples for two classes at the Univer
 
 Labs and other documentation are on the **[wiki](https://github.com/robotic-picker-sp22/fetch-picker/wiki)**.
 
-Last modified by @Yuang Tong
+Last modified by @[Yuang Tong](https://github.com/Tongyuang/)
