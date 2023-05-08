@@ -67,8 +67,17 @@ class GripperInteractiveMarker():
             'R_GRIPPER_MESH':'package://fetch_description/meshes/r_gripper_finger_link.STL',
             'GRIPPER_MESH':'package://fetch_description/meshes/gripper_link.dae'   
         }
-        self._grippercolor = ColorRGBA(r=0.0,g=0.9,b=0.1,a=1.0)
-        self._6DofinteractiveMarker = self.Create6DofMarker(posestamped)
+        self._grippercolor = ColorRGBA(r=0.0,g=0.9,b=0.1,a=1.0)   
+        self.X_OFFSET = 0.177
+        # create markers with offset
+        target_pose = Pose()
+        target_pose.orientation.w = 1
+        target_pose.position.x = self.X_OFFSET
+        markerPoseStamped = copy.deepcopy(posestamped)
+        markerPoseStamped.pose = self._calWorldPos(posestamped.pose,target_pose)
+        self.markers = self.CreateGripperMarkers(posestamped = markerPoseStamped, color = self._grippercolor)
+        self._6DofinteractiveMarker = self.Create6DofMarker(self.markers,posestamped)
+        
     @staticmethod
     def _calWorldPos(posetarget,pose_refer_to_target):
         """Calculate position in world coordinate instead of refer to the 
@@ -163,41 +172,44 @@ class GripperInteractiveMarker():
         return {'gripper_marker':gripper_marker,
                 'l_gripper_marker':l_gripper_marker,
                 'r_gripper_marker':r_gripper_marker}
-    
-    def Create6DofMarker(self,posestamped,X_OFFSET=0.177,color=None):
-        """Create a 6Dof Interactive Marker
+
+    def Create6DofMarker(self,marker_dict,posestamped,intMarker_name="gripper_marker-6dof",marker_scale=0.5):
+        """Create a 6 Dof Marker
 
         Args:
-            posestamped (PoseStamped): The pose for the interactive marker
-            X_OFFSET (float): we actually want the marker to be centered on the wrist_roll_link
+            posestamped (PoseStamped): The pose of the marker
+            marker_dict (dict): the marker dict, as created in self.CreateGripperMarkers
+            intMarker_name (str, optional): intMarker_name. Defaults to "gripper_marker-6dof".
+            marker_scale (int, optional): the scale of the marker. Defaults to 0.5
+        Returns:
+            _type_: _description_
         """
+        
         
         # Create an interactive Marker
         intMarker = InteractiveMarker()
         intMarker.header.frame_id = posestamped.header.frame_id
-        intMarker.scale = 0.5
-        intMarker.name = "gripper_marker-6dof"
-        intMarker.description = "gripper_marker-6dof"
+        intMarker.scale = marker_scale
+        intMarker.name = intMarker_name
+        intMarker.description = intMarker_name
         # initialize frame and position based on posestamped
         intMarker.header.stamp = posestamped.header.stamp
         intMarker.pose.position = posestamped.pose.position
         intMarker.pose.orientation = posestamped.pose.orientation
         
         # add a offset for the markers
-        target_pose = Pose()
-        target_pose.orientation.w = 1
-        target_pose.position.x = X_OFFSET
-        posestamped.pose = self._calWorldPos(posestamped.pose,target_pose)
-        
-        self.markers = self.CreateGripperMarkers(posestamped,color)
+        # target_pose = Pose()
+        # target_pose.orientation.w = 1
+        # target_pose.position.x = X_OFFSET
+        # posestamped.pose = self._calWorldPos(posestamped.pose,target_pose)
 
-
+        # self.CreateGripperMarkers(posestamped,color)
         # add a menu
         menucontrol = InteractiveMarkerControl()
         menucontrol.interaction_mode = InteractiveMarkerControl.MENU
         menucontrol.always_visible = True
-        for marker_name in self.markers.keys():
-            menucontrol.markers.append(self.markers[marker_name])
+        for marker_name in marker_dict.keys():
+            menucontrol.markers.append(marker_dict[marker_name])
         intMarker.controls.append(menucontrol)
         # create a 6DoF controller
         control = InteractiveMarkerControl()
@@ -258,6 +270,109 @@ class GripperInteractiveMarker():
     def Update(self,posestamped = None, color = None):
         
         if posestamped is not None:
-            self._6DofinteractiveMarker = self.Create6DofMarker(posestamped)
+            target_pose = Pose()
+            target_pose.orientation.w = 1
+            target_pose.position.x = self.X_OFFSET
+            markerPoseStamped = copy.deepcopy(posestamped)
+            markerPoseStamped.pose = self._calWorldPos(posestamped.pose,target_pose)
+            self.markers = self.CreateGripperMarkers(posestamped = markerPoseStamped, color = self._grippercolor)
+            self._6DofinteractiveMarker = self.Create6DofMarker(self.markers,posestamped)
         if color is not None:
             self.UpdateColor(color)
+
+
+class GripperInteractiveMarkerWithObject(GripperInteractiveMarker):
+    def __init__(self,posestamped):
+        #super(self,GripperInteractiveMarker).__init__()
+        #del GripperInteractiveMarker.__init__
+        
+        self._grippercolor = ColorRGBA(r=0.0,g=0.9,b=0.1,a=1.0)   
+        self._cubecolor = ColorRGBA(r=0.9,g=0.9,b=0.1,a=1.0)   
+        self.mesh_sources = {
+            'L_GRIPPER_MESH': 'package://fetch_description/meshes/l_gripper_finger_link.STL',
+            'R_GRIPPER_MESH':'package://fetch_description/meshes/r_gripper_finger_link.STL',
+            'GRIPPER_MESH':'package://fetch_description/meshes/gripper_link.dae'   
+        }
+        self.GripperMarkerNameDict = {"pre-grasp": {'x':-0.1,'y':0.0,'z':0.0},
+                                 "grasp": {'x':0.0,'y':0.0,'z':0.0},
+                                 "lift": {'x':0.0,'y':0.0,'z':0.2}}
+        self.Update(posestamped)
+    
+    def CreateCubeMarkers(self,posestamped,color=None):
+        """Create a cube marker
+
+        Args:
+            posestamped (PoseStamped): The position of the gripper
+            marker_color (ColorRGBA, optional): The color of the markers. Defaults to ColorRGBA(r=0.0,g=0.9,b=0.1,a=1.0).
+
+        Returns:
+            dict, \{name: marker\}
+        """
+        frame_id = posestamped.header.frame_id
+        marker_color = self._cubecolor if color is None else color
+        
+        cube_marker = Marker()
+        cube_marker.type = Marker.CUBE
+        cube_marker.scale.x = 0.05
+        cube_marker.scale.y = 0.05
+        cube_marker.scale.z = 0.05
+        cube_marker.color = marker_color
+        cube_marker.pose = posestamped.pose
+        cube_marker.header.frame_id = frame_id
+        cube_marker.text = 'gripper_marker'
+        
+        return {'cube_marker':cube_marker}
+    
+    def CreateOtherGripperMarkers(self,posestamped,color=None):
+        """Create a Other Gripper Markers around the cube
+
+        Args:
+            posestamped (PoseStamped): The position of the gripper
+            marker_color (ColorRGBA, optional): The color of the markers. Defaults to ColorRGBA(r=0.0,g=0.9,b=0.1,a=1.0).
+
+        Returns:
+            dict of dict, \{ name: \{name: marker\}\}
+        """
+
+        GripperMarkerDict = {}
+        for name in self.GripperMarkerNameDict.keys():
+            gripper_pose = copy.deepcopy(posestamped)
+            target_pose = Pose()
+            target_pose.orientation.w = 1
+            target_pose.position.x = self.GripperMarkerNameDict[name]['x']
+            target_pose.position.y = self.GripperMarkerNameDict[name]['y']
+            target_pose.position.z = self.GripperMarkerNameDict[name]['z']
+            gripper_pose.pose = self._calWorldPos(gripper_pose.pose,target_pose)
+            GripperMarkerDict[name] = self.CreateGripperMarkers(copy.deepcopy(gripper_pose))
+        
+        return GripperMarkerDict
+    
+    def Update(self,posestamped = None, color = None):
+            
+        if posestamped is not None:
+            self.markers = self.CreateCubeMarkers(posestamped = posestamped, color = self._cubecolor)
+            self.gripper_markers = self.CreateOtherGripperMarkers(posestamped = posestamped, color = self._grippercolor)
+            for gipper_class_name in self.gripper_markers.keys():
+                for gripper_component_name in self.gripper_markers[gipper_class_name].keys():
+                    self.markers[gipper_class_name+'_'+gripper_component_name] = self.gripper_markers[gipper_class_name][gripper_component_name]
+                    self.markers[gipper_class_name+'_'+gripper_component_name].text = gipper_class_name+'_'+gripper_component_name
+            self._6DofinteractiveMarker = self.Create6DofMarker(self.markers, posestamped, intMarker_name="cube_marker-6dof",marker_scale=0.1)
+        if color is not None:
+            self.UpdateColor(color)
+
+    def GetGripperMarkerNameDict(self):
+        return self.GripperMarkerNameDict
+    
+    def UpdateColorByName(self,name, color):
+        """Update Markers' color
+
+        Args:
+            name: the marker name, in ["pre-grasp","grasp","lift"]
+            color (ColorRGBA): The target color
+        """
+        assert name in self.GripperMarkerNameDict.keys()
+        for control in self._6DofinteractiveMarker.controls:
+            for marker in control.markers:
+                if marker.text.startswith(name):
+                    marker.color = color
+        

@@ -111,8 +111,7 @@ def main():
     wait_for_time()
     
     planning_scene = PlanningSceneInterface(frame='base_link')
-    rospy.loginfo('PlanningSceneInterface setup succesfully')
-    
+
     # setup scene
     scene_setup(planning_scene)
     rospy.loginfo('scene_setup setup succesfully')

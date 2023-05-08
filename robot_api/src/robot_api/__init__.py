@@ -4,6 +4,6 @@ from .torso import Torso
 from .head import Head
 from .arm import Arm
 from .arm_joints import ArmJoints
-from .marker import RvizMarker,GripperInteractiveMarker
+from .marker import RvizMarker,GripperInteractiveMarker,GripperInteractiveMarkerWithObject
 from .pose import PosTracker
 from .moveit_goal_builder import MoveItGoalBuilder

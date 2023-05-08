@@ -47,17 +47,24 @@ class Gripper(object):
 
         return self.client.get_result
 
-    def close(self, max_effort=MAX_EFFORT):
+    def close(self, position=None,max_effort=MAX_EFFORT):
         """Closes the gripper.
 
         Args:
             max_effort: The maximum effort, in Newtons, to use. Note that this
                 should not be less than 35N, or else the gripper may not close.
+            position: the close position, should range in [0-0.1], default None
         """
         # TODO: Create goal
+        if position is not None:
+            assert position < 0.1 and position >= 0
+            close_pos = position
+        else:
+            close_pos = CLOSED_POS
+        
         rospy.loginfo('Closing the gripper.')
         goal = GripperCommandGoal()
-        goal.command.position = CLOSED_POS
+        goal.command.position = close_pos
         goal.command.max_effort = max_effort
         # TODO: Send goal
         self.client.send_goal(goal)
