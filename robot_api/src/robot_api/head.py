@@ -84,7 +84,7 @@ class Head(object):
             tilt: The tilt angle, in radians. A positive value is downwards.
         """
         # TODO: Check that the pan/tilt angles are within joint limits
-        if (not pan) and (not tilt):
+        if (pan is None) and (tilt is None):
             return 
         if pan:
             if pan < self.MIN_PAN or pan > self.MAX_PAN:

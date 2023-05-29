@@ -19,12 +19,12 @@ project(perception)
 ## is used, also find other catkin packages
 
 find_package(catkin REQUIRED COMPONENTS
-roscpp
-rospy
-pcl_ros
-rosbag
-sensor_msgs
-tf
+  roscpp
+  rospy
+  pcl_ros
+  rosbag
+  sensor_msgs
+  tf
 )
 
 
