@@ -85,9 +85,9 @@ if __name__ == "__main__":
             elif key in headBindings.keys():
                 ifmovehead = True
                 if key != 'c':
-                    pan += headBindings[key][0]*0.1 # pan speed
+                    pan += headBindings[key][0]*0.2 # pan speed
                     pan = min(max(pan,head.MIN_PAN),head.MAX_PAN)
-                    tilt += headBindings[key][1]*0.1 # tilt speed
+                    tilt += headBindings[key][1]*0.2 # tilt speed
                     tilt = min(max(tilt,head.MIN_TILT),head.MAX_TILT)
                 else:
                     pan = 0

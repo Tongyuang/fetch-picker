@@ -1,0 +1,4 @@
+# Define the request part of the service
+---
+# Define the response part of the service
+sensor_msgs/Image image

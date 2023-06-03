@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-# TODO: import ?????????
-# TODO: import ???????_msgs.msg
-# TODO: import ??????????_msgs.msg
 import math
 import rospy
 import actionlib
@@ -12,8 +9,8 @@ from geometry_msgs.msg import PointStamped
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 
-LOOK_AT_ACTION_NAME = '/head_controller/point_head'  # TODO: Get the name of the look-at action
-PAN_TILT_ACTION_NAME = '/head_controller/follow_joint_trajectory'  # TODO: Get the name of the pan/tilt action
+LOOK_AT_ACTION_NAME = '/head_controller/point_head'  
+PAN_TILT_ACTION_NAME = '/head_controller/follow_joint_trajectory'  
 PAN_JOINT = 'head_pan_joint'  # TODO: Get the name of the head pan joint
 TILT_JOINT = 'head_tilt_joint'  # TODO: Get the name of the head tilt joint
 PAN_TILT_TIME = 2.5  # How many seconds it should take to move the head.
@@ -22,7 +19,7 @@ PAN_TILT_TIME = 2.5  # How many seconds it should take to move the head.
 class Head(object):
     """Head controls the Fetch's head.
 
-    It provides two interfaces:
+    It provides two interfaces:/head_controller/point_
         head.look_at(frame_id, x, y, z)
         head.pan_tilt(pan, tilt) # In radians
 
@@ -44,8 +41,8 @@ class Head(object):
                                                           FollowJointTrajectoryAction)
         # TODO: Wait for both servers
         rospy.loginfo("Waiting for action server...")
-        self.lookat_client.wait_for_server()
         self.pan_tilt_client.wait_for_server()
+        self.lookat_client.wait_for_server()
         rospy.loginfo("Action server started.") 
 
     def look_at(self, frame_id, x, y, z):

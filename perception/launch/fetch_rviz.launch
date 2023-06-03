@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d /usr/yuangtong/study/UWGIX/courses/TECHIN517A/perception/config/rviz/perception_rviz.rviz" />
+  <node pkg="perception" type="keyboard_teleop.py" name="fetch_keyboard_teleop" output="screen" />
+</launch>
