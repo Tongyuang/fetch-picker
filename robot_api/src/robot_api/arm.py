@@ -36,9 +36,9 @@ class Arm(object):
         rospy.loginfo("Waiting for action server...")
         self._client.wait_for_server()
         rospy.loginfo("Action server started.") 
-        rospy.loginfo("Waiting for move group server...")
-        self._move_group_client.wait_for_server()
-        rospy.loginfo("move group server started.") 
+        # rospy.loginfo("Waiting for move group server...")
+        # self._move_group_client.wait_for_server()
+        # rospy.loginfo("move group server started.") 
         
         # create error dict
         self._create_error_dict()
